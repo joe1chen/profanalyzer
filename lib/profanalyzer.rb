@@ -102,15 +102,12 @@ class Profanalyzer
   
   DEFAULT_TOLERANCE = 4
   
-  FULL = YAML::load_file(File.dirname(__FILE__)+"/../config/list.yml")
-  RACIST = FULL.select {|w| w[:racist]}
-  SEXUAL = FULL.select {|w| w[:sexual]}
-  
   DEFAULT_SETTINGS = {:racism => :forbidden,
                       :sexual => :forbidden,
                       :profane => :forbidden,
                       :tolerance => DEFAULT_TOLERANCE,
-                      :custom_subs => {}}
+                      :custom_subs => {},
+                      :definitions_path => File.dirname(__FILE__)+"/../config/list.yml"}
   
   def self.singleton_class
     class << self; self; end
@@ -126,36 +123,47 @@ class Profanalyzer
     end
   end
 
-  def initialize(settings=DEFAULT_SETTINGS)
-    @settings = DEFAULT_SETTINGS
+  def initialize(options={})
+    @settings = DEFAULT_SETTINGS.merge(options)
+    @full = YAML::load_file(@settings[:definitions_path])
+    @racist = @full.select {|w| w[:racist]}
+    @sexual = @full.select {|w| w[:sexual]}
   end
 
   DEFAULT_INSTANCE = new
 
   DEFAULT_OPTS = {:profane => true, :racist => false, :sexist => false}
+
+  def load_definitions(file_path)
+    @full = YAML::load_file(file_path)
+    @racist = @full.select {|w| w[:racist]}
+    @sexual = @full.select {|w| w[:sexual]}
+  end
+  forward_to_default :load_from_file
+
   def add_word(text, badness, opts={})
     opts = DEFAULT_OPTS.merge(opts)
     word = {:word => text, :badness => badness}.merge(opts)
-    FULL << word   if word[:profane]
-    RACIST << word if word[:racist]
-    SEXUAL << word if word[:sexual]
+    @full << word   if word[:profane]
+    @racist << word if word[:racist]
+    @sexual << word if word[:sexual]
   end
   forward_to_default :add_word
 
   def forbidden_words_from_settings # :nodoc:
     banned_words = []
     
-    FULL.each do |word|
+    @full.each do |word|
       banned_words << word[:word] if @settings[:tolerance] <= word[:badness]
     end if @settings[:profane] == :forbidden
     
     return banned_words if @settings[:profane] == :forbidden #save some processing
     
-    RACIST.each do |word|
+    @racist.each do |word|
       banned_words << word[:word] if @settings[:tolerance] <= word[:badness]
     end if @settings[:racism] == :forbidden
     
-    SEXUAL.each do |word|
+    @sexual.each do |word|
       banned_words << word[:word] if @settings[:tolerance] <= word[:badness]
     end if @settings[:sexual] == :forbidden
     banned_words

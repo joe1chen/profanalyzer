@@ -70,4 +70,13 @@ class TestProfanalyzer < Test::Unit::TestCase
     assert_equal(true, analyzer.profane?(original_string, :tolerance => 4, :sexual => true))
     assert_equal(false, analyzer.profane?(original_string, :tolerance => 4, :sexual => false))
   end
+
+  def test_load_definitions
+    original_string = "You're a piece of shit."
+    analyzer = Profanalyzer.new
+    assert_equal(true, analyzer.profane?(original_string, :tolerance => 3))
+
+    analyzer.load_definitions(File.dirname(__FILE__)+"/../config/test_list.yml")
+    assert_equal(false, analyzer.profane?(original_string, :tolerance => 3))
+  end
 end
