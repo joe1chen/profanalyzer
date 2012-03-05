@@ -211,7 +211,7 @@ class Profanalyzer
     end
     banned_words = forbidden_words_from_settings
     banned_words.each do |word|
-      if str =~ /#{word}/i
+      if str =~ /\b#{word}\b/i
         @settings = oldsettings if oldsettings
         return true
       end
