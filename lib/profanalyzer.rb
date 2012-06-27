@@ -98,7 +98,7 @@ require 'yaml'
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 class Profanalyzer
   
-  VERSION = "1.2.0.3"
+  VERSION = "1.2.0.4"
   
   DEFAULT_TOLERANCE = 4
   
@@ -327,6 +327,28 @@ class Profanalyzer
     retstr
   end 
   forward_to_default :strip
+
+  def highlight(*args)
+    str = args[0]
+    if (args.size > 1 && args[1].is_a?(Hash))
+      oldsettings = @settings
+      self.update_settings_from_hash args[1]
+    end
+
+    retstr = str
+
+    @settings[:custom_subs].each do |k,v|
+      retstr.gsub!(/\b#{k.to_s}\b/i,v.to_s)
+    end
+
+    banned_words = Profanalyzer.forbidden_words_from_settings
+    banned_words.each do |word|
+      retstr.gsub!(/\b#{word}\b/i, "<strong>#{word}</strong>")
+    end
+    @settings = oldsettings if oldsettings
+    retstr
+  end
+  forward_to_default :highlight
   
   # Sets Profanalyzer's tolerance. Value should be an integer such that 
   # 0 <= T <= 5.

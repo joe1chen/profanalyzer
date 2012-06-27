@@ -119,4 +119,12 @@ class TestProfanalyzer < Test::Unit::TestCase
     assert_equal(["shit", "mick", "cocksucking"], Profanalyzer.flagged_words("You're a cocksucking piece of shit, you mick."))    
   end
 
+  def test_highlight
+    Profanalyzer.tolerance = 0
+    Profanalyzer.check_all = true
+    original_string = "You're a cocksucking piece of shit, you mick."
+    filtered_string = "You're a <strong>cocksucking</strong> piece of <strong>shit</strong>, you <strong>mick</strong>."
+    assert_equal(filtered_string, Profanalyzer.highlight(original_string))
+  end
+
 end
